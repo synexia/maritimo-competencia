@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const https = require('https');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,9 @@ const PRODUCTOS = [
   { id: '5',  campo: 'gasoleoPlus' },
   { id: '6',  campo: 'glp' },
 ];
+
+// Agente HTTPS que ignora certificados autofirmados (igual que n8n)
+const agenteSinSSL = new https.Agent({ rejectUnauthorized: false });
 
 async function fetchPrecios(idProducto) {
   const body = JSON.stringify({
@@ -39,12 +43,28 @@ async function fetchPrecios(idProducto) {
 
   const res = await fetch('https://geoportalgasolineras.es/geoportal/rest/busquedaEstaciones', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Language': 'es-ES,es;q=0.9',
+      'Origin': 'https://geoportalgasolineras.es',
+      'Referer': 'https://geoportalgasolineras.es/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    },
     body,
+    // @ts-ignore
+    agent: agenteSinSSL,
   });
 
-  if (!res.ok) throw new Error(`Error API Geoportal: ${res.status}`);
-  return res.json();
+  const texto = await res.text();
+
+  // Log para depuración en Railway
+  if (!res.ok || texto.trim().startsWith('<')) {
+    console.error(`Geoportal error producto ${idProducto} — HTTP ${res.status} — respuesta: ${texto.substring(0, 300)}`);
+    throw new Error(`Geoportal devolvió HTTP ${res.status} para producto ${idProducto}. Puede que el servicio esté caído o bloqueando la petición.`);
+  }
+
+  return JSON.parse(texto);
 }
 
 app.get('/api/precios', async (req, res) => {
