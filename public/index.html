@@ -52,6 +52,12 @@
     #estado{text-align:center;padding:60px 24px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted)}
     .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:10px;vertical-align:middle}
     footer{text-align:center;padding:32px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);margin-top:32px}
+    /* Sortable */
+    th.sortable{cursor:pointer;user-select:none;transition:color .15s}
+    th.sortable:hover{color:var(--text)!important}
+    th.sort-active{color:var(--accent)!important}
+    .arr{display:inline-block;margin-left:3px;font-size:9px;opacity:.5;vertical-align:middle}
+    th.sort-active .arr{opacity:1}
   </style>
 </head>
 <body>
@@ -80,6 +86,9 @@
 
 <script>
   let datosGlobales = [];
+
+  // sortState: por zona -> { col: 'gasolina95', dir: 'asc'|'desc' }
+  const sortState = {};
 
   fetch('/estaciones.json')
     .then(r => r.json())
@@ -128,6 +137,16 @@
     {key:'glp',        label:'GLP'},
   ];
 
+  function sortFilas(filas, zona) {
+    const st = sortState[zona];
+    if (!st) return filas;
+    return [...filas].sort((a, b) => {
+      const va = a[st.col] ?? Infinity;
+      const vb = b[st.col] ?? Infinity;
+      return st.dir === 'asc' ? va - vb : vb - va;
+    });
+  }
+
   function renderTabla(datos) {
     const refId = document.getElementById('select-propia').value;
     const ref = refId ? datos.find(d => d.id === refId) : null;
@@ -136,17 +155,30 @@
     c.innerHTML = '';
 
     zonas.forEach(zona => {
-      const filas = datos.filter(d => d.zona === zona);
+      const filasBase = datos.filter(d => d.zona === zona);
+      const filas = sortFilas(filasBase, zona);
+      const st = sortState[zona];
+
       const zl = document.createElement('div');
       zl.className = 'zona-label'; zl.textContent = zona;
       c.appendChild(zl);
 
       const tbl = document.createElement('table');
-      // Header row 1
+
+      // Header row 1: group labels
       let h = '<thead><tr><th>Nombre</th>';
       COLS.forEach(col => h += `<th class="gh" colspan="3">${col.label}</th>`);
-      h += '</tr><tr><th></th>';
-      COLS.forEach(() => h += '<th>Precio</th><th>Dif.</th><th></th>');
+      h += '</tr>';
+
+      // Header row 2: Precio (sortable) | Dif. | dot
+      h += '<tr><th></th>';
+      COLS.forEach(col => {
+        const isActive = st && st.col === col.key;
+        const arrow = isActive ? (st.dir === 'asc' ? '▲' : '▼') : '▲▼';
+        const activeClass = isActive ? ' sort-active' : '';
+        h += `<th class="sortable${activeClass} bl" data-zona="${zona}" data-col="${col.key}">Precio <span class="arr">${arrow}</span></th>`;
+        h += `<th>Dif.</th><th></th>`;
+      });
       h += '</tr></thead><tbody>';
 
       filas.forEach(row => {
@@ -168,9 +200,28 @@
       });
       h += '</tbody>';
       tbl.innerHTML = h;
+
+      // Attach click listeners to sortable headers
+      tbl.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          const z = th.dataset.zona;
+          const col = th.dataset.col;
+          const cur = sortState[z];
+          if (cur && cur.col === col) {
+            // Toggle direction
+            sortState[z] = { col, dir: cur.dir === 'asc' ? 'desc' : 'asc' };
+          } else {
+            // New column: start ascending (más barata primero)
+            sortState[z] = { col, dir: 'asc' };
+          }
+          renderTabla(datosGlobales);
+        });
+      });
+
       c.appendChild(tbl);
     });
   }
 </script>
 </body>
 </html>
+
