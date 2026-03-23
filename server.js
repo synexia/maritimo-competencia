@@ -13,7 +13,7 @@ const PRODUCTOS = [
   { id: '3',  campo: 'gasolina98' },
   { id: '4',  campo: 'gasoleo' },
   { id: '5',  campo: 'gasoleoPlus' },
-  { id: '6',  campo: 'glp' },
+  { id: '17',  campo: 'glp' },
 ];
 
 // Agente HTTPS que ignora certificados autofirmados (igual que n8n)
