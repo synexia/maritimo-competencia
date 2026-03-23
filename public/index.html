@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Competencia · Maritimo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0d0f14;--surface:#141720;--border:#232736;--accent:#00e5a0;
+      --accent2:#4f8fff;--text:#e8eaf0;--muted:#5a5f75;
+      --green:#00c47a;--red:#ff4d6d;
+      --own-bg:rgba(0,229,160,.06);--own-border:rgba(0,229,160,.25);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;min-height:100vh}
+    header{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:100}
+    .logo{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:var(--accent);letter-spacing:.5px;white-space:nowrap}
+    .logo span{color:var(--muted);font-weight:400}
+    .header-sep{flex:1}
+    .ts{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+    .own-selector{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--own-border);border-radius:6px;padding:6px 12px}
+    .own-selector label{font-size:11px;color:var(--accent);font-weight:500;white-space:nowrap;letter-spacing:.4px;text-transform:uppercase}
+    .own-selector select{background:transparent;border:none;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;cursor:pointer;max-width:200px}
+    .own-selector select option{background:#1a1d28}
+    #btn-update{display:flex;align-items:center;gap:8px;background:var(--accent);color:#000;border:none;border-radius:6px;padding:8px 16px;font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:12px;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s,transform .1s;white-space:nowrap}
+    #btn-update:hover{opacity:.88}#btn-update:active{transform:scale(.97)}
+    #btn-update:disabled{opacity:.4;cursor:not-allowed}
+    #btn-update.loading svg{animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    main{padding:24px;overflow-x:auto}
+    .zona-label{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);padding:20px 0 8px;border-bottom:1px solid var(--border)}
+    table{width:100%;border-collapse:collapse;min-width:960px}
+    thead th{background:var(--surface);padding:9px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+    thead th:first-child{text-align:left;min-width:180px}
+    thead th.gh{text-align:center;border-left:1px solid var(--border);color:var(--text);font-size:11px}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+    tbody tr:hover{background:rgba(255,255,255,.025)}
+    tbody tr.propia{background:var(--own-bg)}
+    tbody tr.propia:hover{background:rgba(0,229,160,.09)}
+    td{padding:8px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;white-space:nowrap;color:var(--text)}
+    td:first-child{text-align:left;font-family:'IBM Plex Sans',sans-serif;font-size:13px}
+    td.bl{border-left:1px solid var(--border)}
+    .nombre-cell{display:flex;align-items:center;gap:8px}
+    .badge{font-size:9px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;background:var(--own-border);color:var(--accent);border-radius:3px;padding:1px 5px}
+    .dp{color:var(--green);font-weight:500}.dn{color:var(--red);font-weight:500}.dz{color:var(--muted)}
+    .dot{display:inline-block;width:7px;height:7px;border-radius:50%}
+    .dg{background:var(--green)}.dr{background:var(--red)}
+    .dc{text-align:center!important}
+    .nd{color:var(--muted);font-size:11px}
+    #estado{text-align:center;padding:60px 24px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted)}
+    .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:10px;vertical-align:middle}
+    footer{text-align:center;padding:32px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);margin-top:32px}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">MARITIMO <span>/ Competencia</span></div>
+  <div class="own-selector">
+    <label>Mi gasolinera</label>
+    <select id="select-propia"><option value="">— Seleccionar —</option></select>
+  </div>
+  <div class="header-sep"></div>
+  <span class="ts" id="timestamp">–</span>
+  <button id="btn-update">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"/>
+    </svg>
+    Actualizar
+  </button>
+</header>
+
+<main id="main-content">
+  <div id="estado">Pulsa <strong>Actualizar</strong> para cargar los precios en tiempo real.</div>
+</main>
+
+<footer>Datos: Geoportal Gasolineras · Ministerio para la Transición Ecológica · España</footer>
+
+<script>
+  let datosGlobales = [];
+
+  fetch('/estaciones.json')
+    .then(r => r.json())
+    .then(est => {
+      const sel = document.getElementById('select-propia');
+      est.filter(e => e.propia).forEach(e => {
+        const o = document.createElement('option');
+        o.value = e.id; o.textContent = e.nombre;
+        sel.appendChild(o);
+      });
+    });
+
+  document.getElementById('select-propia').addEventListener('change', () => {
+    if (datosGlobales.length) renderTabla(datosGlobales);
+  });
+
+  document.getElementById('btn-update').addEventListener('click', cargarPrecios);
+
+  async function cargarPrecios() {
+    const btn = document.getElementById('btn-update');
+    btn.disabled = true; btn.classList.add('loading');
+    document.getElementById('main-content').innerHTML =
+      '<div id="estado"><span class="spinner"></span>Obteniendo precios del Geoportal…</div>';
+    try {
+      const r = await fetch('/api/precios');
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error);
+      datosGlobales = j.data;
+      const ts = new Date(j.timestamp);
+      document.getElementById('timestamp').textContent =
+        'Actualizado: ' + ts.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      renderTabla(datosGlobales);
+    } catch(e) {
+      document.getElementById('main-content').innerHTML =
+        `<div id="estado" style="color:var(--red)">⚠ Error: ${e.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.classList.remove('loading');
+    }
+  }
+
+  const COLS = [
+    {key:'gasolina95', label:'Gasolina 95'},
+    {key:'gasoleo',    label:'Gasóleo A'},
+    {key:'gasolina98', label:'Gasolina 98'},
+    {key:'gasoleoPlus',label:'Gasóleo Premium'},
+    {key:'glp',        label:'GLP'},
+  ];
+
+  function renderTabla(datos) {
+    const refId = document.getElementById('select-propia').value;
+    const ref = refId ? datos.find(d => d.id === refId) : null;
+    const zonas = [...new Set(datos.map(d => d.zona))];
+    const c = document.getElementById('main-content');
+    c.innerHTML = '';
+
+    zonas.forEach(zona => {
+      const filas = datos.filter(d => d.zona === zona);
+      const zl = document.createElement('div');
+      zl.className = 'zona-label'; zl.textContent = zona;
+      c.appendChild(zl);
+
+      const tbl = document.createElement('table');
+      // Header row 1
+      let h = '<thead><tr><th>Nombre</th>';
+      COLS.forEach(col => h += `<th class="gh" colspan="3">${col.label}</th>`);
+      h += '</tr><tr><th></th>';
+      COLS.forEach(() => h += '<th>Precio</th><th>Dif.</th><th></th>');
+      h += '</tr></thead><tbody>';
+
+      filas.forEach(row => {
+        h += `<tr class="${row.propia?'propia':''}">`;
+        h += `<td><div class="nombre-cell">${row.nombre}${row.propia?'<span class="badge">Propia</span>':''}</div></td>`;
+        COLS.forEach(col => {
+          const p = row[col.key];
+          const rp = ref ? ref[col.key] : null;
+          const pStr = p != null ? '€'+p.toFixed(3).replace('.',',') : '<span class="nd">–</span>';
+          let dStr = '<span class="nd">–</span>', dc = '', dot = 'dr';
+          if (p != null && rp != null) {
+            const d = p - rp;
+            dStr = (d>0?'+':'')+d.toFixed(3).replace('.',',');
+            if (d>0){dc='dp';dot='dg'} else if(d<0){dc='dn';dot='dr'} else {dc='dz';dot='dr'}
+          }
+          h += `<td class="bl">${pStr}</td><td class="${dc}">${dStr}</td><td class="dc"><span class="dot ${dot}"></span></td>`;
+        });
+        h += '</tr>';
+      });
+      h += '</tbody>';
+      tbl.innerHTML = h;
+      c.appendChild(tbl);
+    });
+  }
+</script>
+</body>
+</html>
