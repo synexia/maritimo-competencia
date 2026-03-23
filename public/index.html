@@ -45,9 +45,9 @@
     .nombre-cell{display:flex;align-items:center;gap:8px}
     .badge{font-size:9px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;background:var(--own-border);color:var(--accent);border-radius:3px;padding:1px 5px}
     .dp{color:var(--green);font-weight:500}.dn{color:var(--red);font-weight:500}.dz{color:var(--muted)}
-    .dot{display:inline-block;width:7px;height:7px;border-radius:50%}
-    .dg{background:var(--green)}.dr{background:var(--red)}
-    .dc{text-align:center!important}
+    
+    
+    
     .nd{color:var(--muted);font-size:11px}
     #estado{text-align:center;padding:60px 24px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted)}
     .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:10px;vertical-align:middle}
@@ -167,7 +167,7 @@
 
       // Header row 1: group labels
       let h = '<thead><tr><th>Nombre</th>';
-      COLS.forEach(col => h += `<th class="gh" colspan="3">${col.label}</th>`);
+      COLS.forEach(col => h += `<th class="gh" colspan="2">${col.label}</th>`);
       h += '</tr>';
 
       // Header row 2: Precio (sortable) | Dif. | dot
@@ -177,7 +177,7 @@
         const arrow = isActive ? (st.dir === 'asc' ? '▲' : '▼') : '▲▼';
         const activeClass = isActive ? ' sort-active' : '';
         h += `<th class="sortable${activeClass} bl" data-zona="${zona}" data-col="${col.key}">Precio <span class="arr">${arrow}</span></th>`;
-        h += `<th>Dif.</th><th></th>`;
+        h += `<th>Dif.</th>`;
       });
       h += '</tr></thead><tbody>';
 
@@ -188,13 +188,13 @@
           const p = row[col.key];
           const rp = ref ? ref[col.key] : null;
           const pStr = p != null ? '€'+p.toFixed(3).replace('.',',') : '<span class="nd">–</span>';
-          let dStr = '<span class="nd">–</span>', dc = '', dot = 'dr';
+          let dStr = '<span class="nd">–</span>', dc = '';
           if (p != null && rp != null) {
             const d = p - rp;
             dStr = (d>0?'+':'')+d.toFixed(3).replace('.',',');
-            if (d>0){dc='dp';dot='dg'} else if(d<0){dc='dn';dot='dr'} else {dc='dz';dot='dr'}
+            if (d>0){dc='dp'} else if(d<0){dc='dn'} else {dc='dz'}
           }
-          h += `<td class="bl">${pStr}</td><td class="${dc}">${dStr}</td><td class="dc"><span class="dot ${dot}"></span></td>`;
+          h += `<td class="bl">${pStr}</td><td class="${dc}">${dStr}</td>`;
         });
         h += '</tr>';
       });
@@ -224,4 +224,3 @@
 </script>
 </body>
 </html>
-
